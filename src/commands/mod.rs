@@ -5,6 +5,7 @@ mod broadcast_typing;
 mod image;
 mod ping;
 mod prefix;
+mod restart;
 mod uptime;
 
 pub fn handle(ctx: Context, msg: &Message, cmd: &str) {
@@ -18,6 +19,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) {
         image::PREFIX => image::handle(ctx, msg, args),
         ping::PREFIX => ping::handle(ctx, msg, args),
         prefix::PREFIX => prefix::handle(ctx, msg, args),
+        restart::PREFIX => restart::handle(ctx, msg, args),
         uptime::PREFIX => uptime::handle(ctx, msg, args),
         _ => image::handle(ctx, msg, cmd),
     }
