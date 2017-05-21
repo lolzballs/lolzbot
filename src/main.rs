@@ -5,9 +5,11 @@ extern crate lazy_static;
 #[macro_use]
 extern crate serde_derive;
 
+extern crate mysql;
 extern crate serde;
 extern crate serde_json;
 extern crate serenity;
+extern crate typemap;
 
 mod commands;
 mod config;
@@ -17,17 +19,25 @@ mod events;
 use config::Config;
 use error::*;
 
-use std::sync::RwLock;
 use std::time::SystemTime;
 
 use serenity::Client;
 use serenity::model::UserId;
+use typemap::Key;
 
-lazy_static! {
-    static ref CONFIG: RwLock<Config> =
-        RwLock::new(Config::from_file("config.json").expect("Error reading config"));
-    static ref USER_ID: RwLock<Option<UserId>> = RwLock::new(None);
-    static ref START_TIME: SystemTime = SystemTime::now();
+struct StartTime;
+impl Key for StartTime {
+    type Value = SystemTime;
+}
+
+struct Prefix;
+impl Key for Prefix {
+    type Value = String;
+}
+
+struct BotId;
+impl Key for BotId {
+    type Value = UserId;
 }
 
 fn main() {
@@ -38,14 +48,14 @@ fn main() {
 }
 
 fn actual_main() -> Result<()> {
-    lazy_static::initialize(&START_TIME);
+    let config = Config::from_file("config.json")?;
 
-    let token = {
-        let config = &CONFIG.read().unwrap();
-        config.token.clone()
-    };
-
-    let mut client = Client::login(&token);
+    let mut client = Client::login(&config.token);
+    {
+        let mut data = client.data.lock().unwrap();
+        data.insert::<Prefix>(config.prefix);
+        data.insert::<StartTime>(SystemTime::now());
+    }
     client.on_ready(events::on_ready);
     client.on_message(events::on_message);
 
