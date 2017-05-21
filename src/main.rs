@@ -18,6 +18,7 @@ use config::Config;
 use error::*;
 
 use std::sync::RwLock;
+use std::time::SystemTime;
 
 use serenity::Client;
 use serenity::model::UserId;
@@ -26,6 +27,7 @@ lazy_static! {
     static ref CONFIG: RwLock<Config> =
         RwLock::new(Config::from_file("config.json").expect("Error reading config"));
     static ref USER_ID: RwLock<Option<UserId>> = RwLock::new(None);
+    static ref START_TIME: SystemTime = SystemTime::now();
 }
 
 fn main() {
@@ -36,6 +38,8 @@ fn main() {
 }
 
 fn actual_main() -> Result<()> {
+    lazy_static::initialize(&START_TIME);
+
     let token = {
         let config = &CONFIG.read().unwrap();
         config.token.clone()
