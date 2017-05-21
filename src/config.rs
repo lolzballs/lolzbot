@@ -7,6 +7,10 @@ use std::path::Path;
 pub struct Config {
     pub token: String,
     pub prefix: String,
+    pub db_ip: Option<String>,
+    pub db_port: Option<u16>,
+    pub db_user: Option<String>,
+    pub db_pass: Option<String>,
 }
 
 impl Config {

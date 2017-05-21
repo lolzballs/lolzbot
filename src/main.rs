@@ -21,20 +21,23 @@ use error::*;
 
 use std::time::SystemTime;
 
+use mysql::{Opts, OptsBuilder};
 use serenity::Client;
 use serenity::model::UserId;
 use typemap::Key;
 
+struct DbPool;
+impl Key for DbPool {
+    type Value = mysql::Pool;
+}
 struct StartTime;
 impl Key for StartTime {
     type Value = SystemTime;
 }
-
 struct Prefix;
 impl Key for Prefix {
     type Value = String;
 }
-
 struct BotId;
 impl Key for BotId {
     type Value = UserId;
@@ -51,11 +54,26 @@ fn actual_main() -> Result<()> {
     let config = Config::from_file("config.json")?;
 
     let mut client = Client::login(&config.token);
+
+    let pool = {
+        let mut builder = OptsBuilder::new();
+        builder
+            .ip_or_hostname(config.db_ip)
+            .tcp_port(config.db_port.unwrap_or(3306))
+            .user(config.db_user)
+            .pass(config.db_pass);
+
+        let opts: Opts = builder.into();
+        mysql::Pool::new(opts)?
+    };
+
     {
         let mut data = client.data.lock().unwrap();
+        data.insert::<DbPool>(pool);
         data.insert::<Prefix>(config.prefix);
         data.insert::<StartTime>(SystemTime::now());
     }
+
     client.on_ready(events::on_ready);
     client.on_message(events::on_message);
 
