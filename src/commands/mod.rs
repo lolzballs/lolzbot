@@ -1,6 +1,7 @@
 use serenity::client::Context;
 use serenity::model::Message;
 
+mod broadcast_typing;
 mod image;
 mod ping;
 
@@ -11,8 +12,8 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) {
             Some(n) => cmd.split_at(n),
             None => (cmd, ""),
         };
-        println!("{}", cmd);
         match cmd.trim() {
+            broadcast_typing::PREFIX => broadcast_typing::handle(ctx, msg, args.trim()),
             image::PREFIX => image::handle(ctx, msg, args.trim()),
             ping::PREFIX => ping::handle(ctx, msg, args.trim()),
             _ => println!("{}", cmd),
