@@ -3,6 +3,6 @@ use serenity::model::Message;
 
 pub const PREFIX: &'static str = "ping";
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) {
+pub fn handle(_: Context, msg: &Message, _: &str) {
     msg.reply("Pong!").unwrap();
 }

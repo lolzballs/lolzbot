@@ -5,6 +5,6 @@ use serenity::model::Message;
 
 pub const PREFIX: &'static str = "restart";
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) {
+pub fn handle(_: Context, _: &Message, _: &str) {
     std::process::exit(0);
 }

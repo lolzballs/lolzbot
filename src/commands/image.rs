@@ -9,7 +9,7 @@ fn load_image(path: &str) -> ::Result<File> {
     Ok(File::open(path)?)
 }
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) {
+pub fn handle(_: Context, msg: &Message, cmd: &str) {
     let filename = [cmd, ".jpg"].join("");
     match load_image(&filename) {
         Ok(file) => {
