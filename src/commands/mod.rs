@@ -8,7 +8,7 @@ mod prefix;
 mod restart;
 mod uptime;
 
-pub fn handle(ctx: Context, msg: &Message, orig_cmd: &str) -> Option<MessageId> {
+pub fn handle(ctx: Context, msg: &Message, orig_cmd: &str) -> ::Result<Option<MessageId>> {
     let (cmd, args) = match orig_cmd.find(' ') {
         Some(n) => orig_cmd.split_at(n),
         None => (orig_cmd, ""),

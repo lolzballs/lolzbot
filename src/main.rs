@@ -73,7 +73,6 @@ fn actual_main() -> Result<()> {
         let mut data = client.data.lock().unwrap();
         data.insert::<DbPool>(pool);
         data.insert::<Prefix>(config.prefix);
-        data.insert::<StartTime>(Instant::now());
     }
 
     client.on_message_delete(events::on_message_delete);

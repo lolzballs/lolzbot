@@ -5,9 +5,15 @@ use serenity::model::{Message, MessageId};
 
 pub const PREFIX: &'static str = "uptime";
 
-pub fn handle(ctx: Context, msg: &Message, _: &str) -> Option<MessageId> {
-    let duration =
-        Instant::now().duration_since(*ctx.data.lock().unwrap().get::<::StartTime>().unwrap());
+pub fn handle(ctx: Context, msg: &Message, _: &str) -> ::Result<Option<MessageId>> {
+    let duration = {
+        let data = ctx.data.lock().unwrap();
+        let start = match data.get::<::StartTime>() {
+            Some(time) => time,
+            None => bail!("No start time!"),
+        };
+        Instant::now().duration_since(*start)
+    };
     let delta = duration.as_secs();
     let (hours, remainder) = (delta / 3600, delta % 3600);
     let (minutes, seconds) = (remainder / 60, remainder % 60);
@@ -65,5 +71,5 @@ pub fn handle(ctx: Context, msg: &Message, _: &str) -> Option<MessageId> {
                    seconds.to_string().as_str(),
                    seconds_txt]
             .concat();
-    Some(msg.reply(&message).unwrap().id)
+    Ok(Some(msg.reply(&message)?.id))
 }

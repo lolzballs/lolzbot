@@ -9,15 +9,10 @@ fn load_image(path: &str) -> ::Result<File> {
     Ok(File::open(path)?)
 }
 
-pub fn handle(_: Context, msg: &Message, cmd: &str) -> Option<MessageId> {
+pub fn handle(_: Context, msg: &Message, cmd: &str) -> ::Result<Option<MessageId>> {
     let filename = [cmd, ".jpg"].concat();
-    match load_image(&filename) {
-        Ok(file) => {
-            Some(msg.channel_id
-                     .send_file(file, &filename, |e| e)
-                     .unwrap()
-                     .id)
-        }
-        Err(_) => None,
-    }
+    Ok(match load_image(&filename) {
+           Ok(file) => Some(msg.channel_id.send_file(file, &filename, |e| e)?.id),
+           Err(_) => None,
+       })
 }

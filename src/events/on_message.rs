@@ -43,13 +43,22 @@ pub fn handle(ctx: Context, msg: Message) {
     };
 
     match commands::handle(ctx, &msg, cmd.trim()) {
-        Some(response) => {
-            db.prep_exec(r#"INSERT INTO commands (`message_id`, `channel_id`, `response_id`)
+        Ok(response) => {
+            match response {
+                Some(response) => {
+                    db.prep_exec(r#"INSERT INTO commands (`message_id`, `channel_id`, `response_id`)
                                   VALUES (:id, :channel, :response)
                  "#,
                            (msg.id.0, msg.channel_id.0, response.0))
                 .unwrap();
+                }
+                None => (),
+            }
         }
-        None => (),
+        Err(e) => {
+            msg.reply("An internal error occured. Sorry!").unwrap();
+            println!("{}", e);
+        }
     }
+
 }
