@@ -4,7 +4,7 @@ use mysql;
 use serenity::client::Context;
 use serenity::model::Message;
 
-pub fn handle(ctx: Context, msg: Message) {
+pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
     let db = ctx.data
         .lock()
         .unwrap()
@@ -38,7 +38,7 @@ pub fn handle(ctx: Context, msg: Message) {
         if let Some(prefix) = cmd {
             msg.content.split_at(prefix.len()).1
         } else {
-            return;
+            return Ok(());
         }
     };
 
@@ -53,12 +53,12 @@ pub fn handle(ctx: Context, msg: Message) {
                 .unwrap();
                 }
                 None => (),
-            }
+            };
+            Ok(())
         }
         Err(e) => {
-            msg.reply("An internal error occured. Sorry!").unwrap();
-            println!("{}", e);
+            msg.reply("An internal error occured. Sorry!")?;
+            Err(e)
         }
     }
-
 }

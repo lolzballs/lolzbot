@@ -43,6 +43,10 @@ struct BotId;
 impl Key for BotId {
     type Value = UserId;
 }
+struct OwnerId;
+impl Key for OwnerId {
+    type Value = UserId;
+}
 
 fn main() {
     std::process::exit(match actual_main() {
@@ -73,6 +77,8 @@ fn actual_main() -> Result<()> {
         let mut data = client.data.lock().unwrap();
         data.insert::<DbPool>(pool);
         data.insert::<Prefix>(config.prefix);
+        data.insert::<OwnerId>(config.owner.into());
+        data.insert::<StartTime>(Instant::now());
     }
 
     client.on_message_delete(events::on_message_delete);

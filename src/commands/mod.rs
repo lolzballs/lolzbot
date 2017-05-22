@@ -2,6 +2,7 @@ use serenity::client::Context;
 use serenity::model::{Message, MessageId};
 
 mod broadcast_typing;
+mod exception;
 mod image;
 mod ping;
 mod prefix;
@@ -16,6 +17,7 @@ pub fn handle(ctx: Context, msg: &Message, orig_cmd: &str) -> ::Result<Option<Me
     let args = args.trim();
     match cmd.trim() {
         broadcast_typing::PREFIX => broadcast_typing::handle(ctx, msg, args),
+        exception::PREFIX => exception::handle(ctx, msg, args),
         image::PREFIX => image::handle(ctx, msg, args),
         ping::PREFIX => ping::handle(ctx, msg, args),
         prefix::PREFIX => prefix::handle(ctx, msg, args),
