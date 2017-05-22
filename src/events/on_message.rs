@@ -11,30 +11,28 @@ pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
         .get::<::DbPool>()
         .unwrap()
         .clone();
-    let prefixes = {
+    let bot_mention = {
         let data = ctx.data.lock().unwrap();
-        let default = data.get::<::Prefix>().unwrap().clone();
-        let bot_mention = data.get::<::BotId>().map(|id| format!("<@{}>", id.0));
-
-        let user: Option<String> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
-                                                (msg.author.id.0,))
-            .unwrap()
-            .next()
-            .map(|r| mysql::from_row(r.unwrap()));
-        let mut prefixes = vec![default];
-        if let Some(prefix) = bot_mention {
-            prefixes.push(prefix);
-        }
-        if let Some(prefix) = user {
-            prefixes.push(prefix);
-        }
-        prefixes
+        data.get::<::BotId>().map(|id| format!("<@{}>", id.0))
     };
+
+    let user: Option<String> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
+                                            (msg.author.id.0,))
+        .unwrap()
+        .next()
+        .map(|r| mysql::from_row(r.unwrap()));
+    let mut prefixes = vec![&::CONFIG.prefix];
+    if let Some(prefix) = bot_mention.as_ref() {
+        prefixes.push(prefix);
+    }
+    if let Some(prefix) = user.as_ref() {
+        prefixes.push(&prefix);
+    }
 
     let cmd = {
         let cmd = prefixes
             .iter()
-            .find(|&prefix| msg.content.starts_with(prefix));
+            .find(|&&prefix| msg.content.starts_with(prefix));
         if let Some(prefix) = cmd {
             msg.content.split_at(prefix.len()).1
         } else {

@@ -27,6 +27,10 @@ use serenity::Client;
 use serenity::model::UserId;
 use typemap::Key;
 
+lazy_static! {
+    static ref CONFIG: Config = Config::from_file("config.json").unwrap();
+}
+
 struct DbPool;
 impl Key for DbPool {
     type Value = mysql::Pool;
@@ -35,16 +39,8 @@ struct StartTime;
 impl Key for StartTime {
     type Value = Instant;
 }
-struct Prefix;
-impl Key for Prefix {
-    type Value = String;
-}
 struct BotId;
 impl Key for BotId {
-    type Value = UserId;
-}
-struct OwnerId;
-impl Key for OwnerId {
     type Value = UserId;
 }
 
@@ -56,18 +52,16 @@ fn main() {
 }
 
 fn actual_main() -> Result<()> {
-    let config = Config::from_file("config.json")?;
-
-    let mut client = Client::login(&config.token);
+    let mut client = Client::login(&CONFIG.token);
 
     let pool = {
         let mut builder = OptsBuilder::new();
         builder
-            .ip_or_hostname(config.db_ip)
-            .tcp_port(config.db_port.unwrap_or(3306))
-            .user(config.db_user)
-            .pass(config.db_pass)
-            .db_name(config.db_name);
+            .ip_or_hostname(CONFIG.db_ip.clone())
+            .tcp_port(CONFIG.db_port.unwrap_or(3306))
+            .user(CONFIG.db_user.clone())
+            .pass(CONFIG.db_pass.clone())
+            .db_name(CONFIG.db_name.clone());
 
         let opts: Opts = builder.into();
         mysql::Pool::new(opts)?
@@ -76,8 +70,6 @@ fn actual_main() -> Result<()> {
     {
         let mut data = client.data.lock().unwrap();
         data.insert::<DbPool>(pool);
-        data.insert::<Prefix>(config.prefix);
-        data.insert::<OwnerId>(config.owner.into());
         data.insert::<StartTime>(Instant::now());
     }
 
