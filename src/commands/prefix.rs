@@ -8,7 +8,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> Option<MessageId> {
         .lock()
         .unwrap()
         .insert::<::Prefix>(cmd.to_owned());
-    Some(msg.reply(&["Prefix changed to ", cmd, "!"].join(""))
+    Some(msg.reply(&["Prefix changed to ", cmd, "!"].concat())
              .unwrap()
              .id)
 }

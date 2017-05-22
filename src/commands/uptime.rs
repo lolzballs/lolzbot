@@ -13,29 +13,57 @@ pub fn handle(ctx: Context, msg: &Message, _: &str) -> Option<MessageId> {
     let (minutes, seconds) = (remainder / 60, remainder % 60);
     let (days, hours) = (hours / 24, hours % 24);
 
-    let mut message = String::from("This bot has been up for ");
-    if days != 0 {
-        message.push_str(days.to_string().as_str());
-        message.push_str(if days == 1 { " day, " } else { " days, " });
-    }
-    if hours != 0 {
-        message.push_str(hours.to_string().as_str());
-        message.push_str(if hours == 1 { " hour, " } else { " hours, " });
-    }
-    if minutes != 0 {
-        message.push_str(minutes.to_string().as_str());
-        message.push_str(if minutes == 1 {
-                             " minute,  and "
-                         } else {
-                             " minutes, and "
-                         });
-    }
+    let days_str = if days != 0 {
+        Some(days.to_string())
+    } else {
+        None
+    };
+    let days_txt = if days == 1 {
+        " day, "
+    } else if days != 0 {
+        " days, "
+    } else {
+        ""
+    };
+    let hours_str = if hours != 0 {
+        Some(hours.to_string())
+    } else {
+        None
+    };
+    let hours_txt = if hours == 1 {
+        " hour, "
+    } else if hours != 0 {
+        " hours, "
+    } else {
+        ""
+    };
+    let minutes_str = if minutes != 0 {
+        Some(minutes.to_string())
+    } else {
+        None
+    };
+    let minutes_txt = if minutes == 1 {
+        " minute, and "
+    } else if minutes != 0 {
+        " minutes, and "
+    } else {
+        ""
+    };
+    let seconds_txt = if seconds == 1 {
+        " second!"
+    } else {
+        " seconds!"
+    };
 
-    message.push_str(seconds.to_string().as_str());
-    message.push_str(if seconds == 1 {
-                         " second."
-                     } else {
-                         " seconds."
-                     });
+    let message = ["This bot has been up for ",
+                   days_str.as_ref().map_or("", |s| s.as_str()),
+                   days_txt,
+                   hours_str.as_ref().map_or("", |s| s.as_str()),
+                   hours_txt,
+                   minutes_str.as_ref().map_or("", |s| s.as_str()),
+                   minutes_txt,
+                   seconds.to_string().as_str(),
+                   seconds_txt]
+            .concat();
     Some(msg.reply(&message).unwrap().id)
 }
