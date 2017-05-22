@@ -1,5 +1,5 @@
 use serenity::client::Context;
-use serenity::model::Message;
+use serenity::model::{Message, MessageId};
 
 mod broadcast_typing;
 mod image;
@@ -8,7 +8,7 @@ mod prefix;
 mod restart;
 mod uptime;
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) {
+pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> Option<MessageId> {
     let (cmd, args) = match cmd.find(' ') {
         Some(n) => cmd.split_at(n),
         None => (cmd, ""),

@@ -1,7 +1,7 @@
 use std::fs::File;
 
 use serenity::client::Context;
-use serenity::model::Message;
+use serenity::model::{Message, MessageId};
 
 pub const PREFIX: &'static str = "image";
 
@@ -9,14 +9,15 @@ fn load_image(path: &str) -> ::Result<File> {
     Ok(File::open(path)?)
 }
 
-pub fn handle(_: Context, msg: &Message, cmd: &str) {
+pub fn handle(_: Context, msg: &Message, cmd: &str) -> Option<MessageId> {
     let filename = [cmd, ".jpg"].join("");
     match load_image(&filename) {
         Ok(file) => {
-            msg.channel_id
-                .send_file(file, &filename, |e| e)
-                .unwrap();
+            Some(msg.channel_id
+                     .send_file(file, &filename, |e| e)
+                     .unwrap()
+                     .id)
         }
-        Err(e) => println!("{}", e),
-    };
+        Err(e) => None,
+    }
 }

@@ -11,6 +11,7 @@ pub struct Config {
     pub db_port: Option<u16>,
     pub db_user: Option<String>,
     pub db_pass: Option<String>,
+    pub db_name: Option<String>,
 }
 
 impl Config {

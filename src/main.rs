@@ -19,7 +19,7 @@ mod events;
 use config::Config;
 use error::*;
 
-use std::time::SystemTime;
+use std::time::Instant;
 
 use mysql::{Opts, OptsBuilder};
 use serenity::Client;
@@ -32,7 +32,7 @@ impl Key for DbPool {
 }
 struct StartTime;
 impl Key for StartTime {
-    type Value = SystemTime;
+    type Value = Instant;
 }
 struct Prefix;
 impl Key for Prefix {
@@ -61,7 +61,8 @@ fn actual_main() -> Result<()> {
             .ip_or_hostname(config.db_ip)
             .tcp_port(config.db_port.unwrap_or(3306))
             .user(config.db_user)
-            .pass(config.db_pass);
+            .pass(config.db_pass)
+            .db_name(config.db_name);
 
         let opts: Opts = builder.into();
         mysql::Pool::new(opts)?
@@ -71,9 +72,10 @@ fn actual_main() -> Result<()> {
         let mut data = client.data.lock().unwrap();
         data.insert::<DbPool>(pool);
         data.insert::<Prefix>(config.prefix);
-        data.insert::<StartTime>(SystemTime::now());
+        data.insert::<StartTime>(Instant::now());
     }
 
+    client.on_message_delete(events::on_message_delete);
     client.on_ready(events::on_ready);
     client.on_message(events::on_message);
 

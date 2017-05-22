@@ -20,5 +20,22 @@ pub fn handle(ctx: Context, msg: Message) {
             return;
         }
     };
-    commands::handle(ctx, &msg, cmd.trim());
+    let db = {
+        ctx.data
+            .lock()
+            .unwrap()
+            .get::<::DbPool>()
+            .unwrap()
+            .clone()
+    };
+    match commands::handle(ctx, &msg, cmd.trim()) {
+        Some(response) => {
+            db.prep_exec(r#"INSERT INTO commands (`message_id`, `channel_id`, `response_id`)
+                                  VALUES (:id, :channel, :response)
+                 "#,
+                           (msg.id.0, msg.channel_id.0, response.0))
+                .unwrap();
+        }
+        None => (),
+    }
 }
