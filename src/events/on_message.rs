@@ -1,33 +1,47 @@
 use commands;
 
+use mysql;
 use serenity::client::Context;
 use serenity::model::Message;
 
 pub fn handle(ctx: Context, msg: Message) {
-    let cmd = {
+    let db = ctx.data
+        .lock()
+        .unwrap()
+        .get::<::DbPool>()
+        .unwrap()
+        .clone();
+    let prefixes = {
         let data = ctx.data.lock().unwrap();
+        let default = data.get::<::Prefix>().unwrap().clone();
         let bot_mention = data.get::<::BotId>().map(|id| format!("<@{}>", id.0));
-        let prefix = data.get::<::Prefix>().unwrap();
-        if msg.content.starts_with(prefix) {
+
+        let user: Option<String> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
+                                                (msg.author.id.0,))
+            .unwrap()
+            .next()
+            .map(|r| mysql::from_row(r.unwrap()));
+        let mut prefixes = vec![default];
+        if let Some(prefix) = bot_mention {
+            prefixes.push(prefix);
+        }
+        if let Some(prefix) = user {
+            prefixes.push(prefix);
+        }
+        prefixes
+    };
+
+    let cmd = {
+        let cmd = prefixes
+            .iter()
+            .find(|&prefix| msg.content.starts_with(prefix));
+        if let Some(prefix) = cmd {
             msg.content.split_at(prefix.len()).1
-        } else if let Some(prefix) = bot_mention {
-            if msg.content.starts_with(&prefix) {
-                msg.content.split_at(prefix.len()).1
-            } else {
-                return;
-            }
         } else {
             return;
         }
     };
-    let db = {
-        ctx.data
-            .lock()
-            .unwrap()
-            .get::<::DbPool>()
-            .unwrap()
-            .clone()
-    };
+
     match commands::handle(ctx, &msg, cmd.trim()) {
         Some(response) => {
             db.prep_exec(r#"INSERT INTO commands (`message_id`, `channel_id`, `response_id`)

@@ -1,5 +1,5 @@
 CREATE TABLE commands (
-    message_id BIGINT UNSIGNED PRIMARY KEY,
-    channel_id BIGINT UNSIGNED,
-    response_id BIGINT UNSIGNED
+    message_id BIGINT UNSIGNED PRIMARY KEY NOT NULL,
+    channel_id BIGINT UNSIGNED NOT NULL,
+    response_id BIGINT UNSIGNED NOT NULL
 );
