@@ -8,10 +8,10 @@ mod prefix;
 mod restart;
 mod uptime;
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> Option<MessageId> {
-    let (cmd, args) = match cmd.find(' ') {
-        Some(n) => cmd.split_at(n),
-        None => (cmd, ""),
+pub fn handle(ctx: Context, msg: &Message, orig_cmd: &str) -> Option<MessageId> {
+    let (cmd, args) = match orig_cmd.find(' ') {
+        Some(n) => orig_cmd.split_at(n),
+        None => (orig_cmd, ""),
     };
     let args = args.trim();
     match cmd.trim() {
@@ -21,6 +21,6 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> Option<MessageId> {
         prefix::PREFIX => prefix::handle(ctx, msg, args),
         restart::PREFIX => restart::handle(ctx, msg, args),
         uptime::PREFIX => uptime::handle(ctx, msg, args),
-        _ => image::handle(ctx, msg, cmd),
+        _ => image::handle(ctx, msg, orig_cmd),
     }
 }
