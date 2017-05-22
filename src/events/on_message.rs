@@ -17,8 +17,7 @@ pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
     };
 
     let user: Option<String> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
-                                            (msg.author.id.0,))
-        .unwrap()
+                                            (msg.author.id.0,))?
         .next()
         .map(|r| mysql::from_row(r.unwrap()));
     let mut prefixes = vec![&::CONFIG.prefix];
@@ -47,8 +46,7 @@ pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
                     db.prep_exec(r#"INSERT INTO commands (`message_id`, `channel_id`, `response_id`)
                                   VALUES (:id, :channel, :response)
                  "#,
-                           (msg.id.0, msg.channel_id.0, response.0))
-                .unwrap();
+                           (msg.id.0, msg.channel_id.0, response.0))?;
                 }
                 None => (),
             };

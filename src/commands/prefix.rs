@@ -14,8 +14,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> ::Result<Option<Message
     db.prep_exec(r#"INSERT INTO `users` (`id`, `prefix`)
                     VALUES (:id, :prefix)
                     ON DUPLICATE KEY UPDATE `prefix` = :prefix"#,
-                   params!{"id" => msg.author.id.0, "prefix" => cmd})
-        .unwrap();
+                   params!{"id" => msg.author.id.0, "prefix" => cmd})?;
     Ok(Some(msg.reply(&["Prefix changed to ", cmd, "!"].concat())?
                 .id))
 }
