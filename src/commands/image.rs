@@ -10,7 +10,6 @@ fn load_image(path: &str) -> ::Result<File> {
 }
 
 pub fn handle(_: Context, msg: &Message, cmd: &str) -> Option<MessageId> {
-    println!("{}", cmd);
     let filename = [cmd, ".jpg"].join("");
     match load_image(&filename) {
         Ok(file) => {
