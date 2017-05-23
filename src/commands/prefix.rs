@@ -8,17 +8,19 @@ pub const PREFIX: &'static str = "prefix";
 
 pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> ::Result<Option<MessageId>> {
     let db = {
-        let data = ctx.data.lock().unwrap();
+        let data = match ctx.data.lock() {
+            Ok(data) => data,
+            Err(_) => bail!("Mutex was posioned"),
+        };
         match data.get::<::DbPool>() {
             Some(db) => db.clone(),
             None => bail!("No database!"),
         }
     };
     if cmd.len() == 0 {
-        let user_prefix: Option<String> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
-                                                       (msg.author.id.0,))?
-            .next()
-            .map(|r| mysql::from_row(r.unwrap()));
+        let user_prefix: Option<_> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
+                                                  (msg.author.id.0,))?
+            .next();
         let string = {
             let builder = MessageBuilder::new()
                 .push("You can always mention me or use one of the following...\n")
@@ -26,6 +28,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> ::Result<Option<Message
                 .push_mono(&::CONFIG.prefix);
 
             if let Some(prefix) = user_prefix {
+                let prefix: String = mysql::from_row(prefix?);
                 builder
                     .push("\nYour user prefix is: ")
                     .push_mono(&prefix)

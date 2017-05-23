@@ -14,10 +14,13 @@ pub fn on_message(ctx: Context, msg: Message) {
     match self::on_message::handle(ctx, msg) {
         Ok(_) => (),
         Err(e) => {
-            UserId(::CONFIG.owner)
+            let res = UserId(::CONFIG.owner)
                 .get()
-                .and_then(|o| o.dm(&format!("{:?}", e)))
-                .unwrap();
+                .and_then(|o| o.dm(&format!("{:?}", e)));
+            match res {
+                Ok(_) => (),
+                Err(e) => println!("CRITICAL: {:?}", e),
+            }
         }
     }
 }

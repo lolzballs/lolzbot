@@ -5,21 +5,25 @@ use serenity::client::Context;
 use serenity::model::Message;
 
 pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
-    let db = ctx.data
-        .lock()
-        .unwrap()
-        .get::<::DbPool>()
-        .unwrap()
-        .clone();
-    let bot_mention = {
-        let data = ctx.data.lock().unwrap();
-        data.get::<::BotId>().map(|id| format!("<@{}>", id.0))
+    let (db, bot_mention) = {
+        let data = match ctx.data.lock() {
+            Ok(data) => data,
+            Err(_) => bail!("Mutex is poisoned"),
+        };
+        let db = match data.get::<::DbPool>() {
+            Some(db) => db.clone(),
+            None => bail!("No database!"),
+        };
+        let bot_mention = data.get::<::BotId>().map(|id| format!("<@{}>", id.0));
+        (db, bot_mention)
     };
 
-    let user: Option<String> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
-                                            (msg.author.id.0,))?
-        .next()
-        .map(|r| mysql::from_row(r.unwrap()));
+    let user: Option<String> = match db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
+                                                  (msg.author.id.0,))?
+              .next() {
+        Some(prefix) => Some(mysql::from_row(prefix?)),
+        None => None,
+    };
     let mut prefixes = vec![&::CONFIG.prefix];
     if let Some(prefix) = bot_mention.as_ref() {
         prefixes.push(prefix);

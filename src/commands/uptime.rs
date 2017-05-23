@@ -7,7 +7,10 @@ pub const PREFIX: &'static str = "uptime";
 
 pub fn handle(ctx: Context, msg: &Message, _: &str) -> ::Result<Option<MessageId>> {
     let duration = {
-        let data = ctx.data.lock().unwrap();
+        let data = match ctx.data.lock() {
+            Ok(data) => data,
+            Err(_) => bail!("Mutex was poisoned"),
+        };
         let start = match data.get::<::StartTime>() {
             Some(time) => time,
             None => bail!("No start time!"),
