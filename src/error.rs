@@ -10,4 +10,17 @@ error_chain! {
         SerdeJson(serde_json::Error);
         Serenity(serenity::Error);
     }
+
+    errors {
+        MutexPosioned {
+            description("The mutex was poisoned")
+        }
+        NoDatabase {
+            description("The database was not found")
+        }
+        UserError {
+            description("A user requested an error")
+            display("You wanted an error?")
+        }
+    }
 }

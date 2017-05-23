@@ -9,7 +9,7 @@ pub fn handle(ctx: Context, msg: &Message, _: &str) -> ::Result<Option<MessageId
     let duration = {
         let data = match ctx.data.lock() {
             Ok(data) => data,
-            Err(_) => bail!("Mutex was poisoned"),
+            Err(_) => bail!(::ErrorKind::MutexPosioned),
         };
         let start = match data.get::<::StartTime>() {
             Some(time) => time,

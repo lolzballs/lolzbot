@@ -8,11 +8,11 @@ pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
     let (db, bot_mention) = {
         let data = match ctx.data.lock() {
             Ok(data) => data,
-            Err(_) => bail!("Mutex is poisoned"),
+            Err(_) => bail!(::ErrorKind::MutexPosioned),
         };
         let db = match data.get::<::DbPool>() {
             Some(db) => db.clone(),
-            None => bail!("No database!"),
+            None => bail!(::ErrorKind::NoDatabase),
         };
         let bot_mention = data.get::<::BotId>().map(|id| format!("<@{}>", id.0));
         (db, bot_mention)

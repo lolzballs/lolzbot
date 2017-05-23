@@ -1,3 +1,4 @@
+use error_chain::ChainedError;
 use serenity::client::Context;
 use serenity::model::{ChannelId, Message, MessageId, Ready, UserId};
 
@@ -12,7 +13,7 @@ macro_rules! handle {
             Err(e) => {
                 let res = UserId(::CONFIG.owner)
                     .get()
-                    .and_then(|o| o.dm(&format!("{:?}", e)));
+                    .and_then(|o| o.dm(&format!("{}", e.display())));
                 match res {
                     Ok(_) => (),
                     Err(e) => println!("CRITICAL: {:?}", e),

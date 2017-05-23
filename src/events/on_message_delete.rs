@@ -6,11 +6,11 @@ pub fn handle(ctx: Context, channel: ChannelId, msg: MessageId) -> ::Result<()> 
     let db = {
         let data = match ctx.data.lock() {
             Ok(data) => data,
-            Err(_) => bail!("Mutex is poisoned"),
+            Err(_) => bail!(::ErrorKind::MutexPosioned),
         };
         match data.get::<::DbPool>() {
             Some(db) => db.clone(),
-            None => bail!("No database!"),
+            None => bail!(::ErrorKind::NoDatabase),
         }
     };
     let res = db.prep_exec(r#"SELECT (`response_id`)

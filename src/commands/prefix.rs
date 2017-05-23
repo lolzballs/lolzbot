@@ -10,11 +10,11 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> ::Result<Option<Message
     let db = {
         let data = match ctx.data.lock() {
             Ok(data) => data,
-            Err(_) => bail!("Mutex was posioned"),
+            Err(_) => bail!(::ErrorKind::MutexPosioned),
         };
         match data.get::<::DbPool>() {
             Some(db) => db.clone(),
-            None => bail!("No database!"),
+            None => bail!(::ErrorKind::UserError),
         }
     };
     if cmd.len() == 0 {
