@@ -11,12 +11,14 @@ macro_rules! handle {
         match $x {
             Ok(_) => (),
             Err(e) => {
-                let res = UserId(::CONFIG.owner)
-                    .get()
-                    .and_then(|o| o.dm(&format!("{}", e.display())));
-                match res {
-                    Ok(_) => (),
-                    Err(e) => println!("CRITICAL: {:?}", e),
+                for &admin in ::CONFIG.admins.iter() {
+                    let res = UserId(admin)
+                        .get()
+                        .and_then(|o| o.dm(&format!("{}", e.display())));
+                    match res {
+                        Ok(_) => (),
+                        Err(e) => println!("CRITICAL: {:?}", e),
+                    }
                 }
             }
         }
