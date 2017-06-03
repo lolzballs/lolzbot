@@ -14,7 +14,7 @@ macro_rules! handle {
                 for &admin in ::CONFIG.admins.iter() {
                     let res = UserId(admin)
                         .get()
-                        .and_then(|o| o.dm(&format!("{}", e.display())));
+                        .and_then(|o| o.dm(&format!("{:?}", e)));
                     match res {
                         Ok(_) => (),
                         Err(e) => println!("CRITICAL: {:?}", e),
