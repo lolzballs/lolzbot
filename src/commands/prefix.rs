@@ -1,5 +1,4 @@
 use mysql;
-
 use serenity::client::Context;
 use serenity::model::{Message, MessageId};
 use serenity::utils::MessageBuilder;
@@ -14,7 +13,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> ::Result<Option<Message
         };
         match data.get::<::DbPool>() {
             Some(db) => db.clone(),
-            None => bail!(::ErrorKind::UserError),
+            None => bail!(::ErrorKind::NoDatabase),
         }
     };
     if cmd.len() == 0 {

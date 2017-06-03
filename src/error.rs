@@ -1,3 +1,4 @@
+use hyper;
 use mysql;
 use serde_json;
 use serenity;
@@ -5,6 +6,7 @@ use std;
 
 error_chain! {
     foreign_links {
+        Hyper(hyper::Error);
         Io(std::io::Error);
         MySql(mysql::Error);
         SerdeJson(serde_json::Error);
