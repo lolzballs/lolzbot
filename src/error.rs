@@ -20,6 +20,9 @@ error_chain! {
         NoDatabase {
             description("The database was not found")
         }
+        NoBotId {
+            description("There was no bot id")
+        }
         UserError {
             description("A user requested an error")
             display("You wanted an error?")

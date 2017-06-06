@@ -44,7 +44,7 @@ pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
     };
 
     match commands::handle(ctx, &msg, cmd.trim()) {
-        Ok(response) => {
+        Ok((response, cb)) => {
             match response {
                 Some(response) => {
                     db.prep_exec(r#"INSERT INTO commands (`message_id`, `channel_id`, `response_id`)
@@ -52,6 +52,10 @@ pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
                  "#,
                            (msg.id.0, msg.channel_id.0, response.0))?;
                 }
+                None => (),
+            };
+            match cb {
+                Some(f) => f(db)?,
                 None => (),
             };
             Ok(())

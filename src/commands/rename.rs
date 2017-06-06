@@ -1,24 +1,20 @@
 use std::io::Cursor;
 
-use serde_json::{self, Value};
-use hyper::Client;
-use hyper::header::Authorization;
-use multipart::client::lazy::Multipart;
+use mysql;
 use serenity::client::Context;
 use serenity::model::{Message, MessageId};
 
 pub const PREFIX: &'static str = "upload";
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
+pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> ::Result<Option<MessageId>> {
     match ::CONFIG.admins.iter().find(|&&a| a == msg.author.id.0) {
         Some(_) => {
             if msg.attachments.len() == 1 {
                 let mut image = match msg.attachments[0].download() {
                     Ok(image) => Cursor::new(image),
                     Err(e) => {
-                        return Ok((Some(msg.reply(&format!("Error downloading image: {}", e))?
-                                            .id),
-                                   None))
+                        return Ok(Some(msg.reply(&format!("Error downloading image: {}", e))?
+                                           .id))
                     }
                 };
                 let res = Multipart::new()
@@ -31,20 +27,29 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                     Value::Bool(true) => {
                         match res["data"]["id"] {
                             Value::String(ref code) => {
-                                let db = get_database!(ctx);
+                                let db = {
+                                    let data = match ctx.data.lock() {
+                                        Ok(data) => data,
+                                        Err(_) => bail!(::ErrorKind::MutexPosioned),
+                                    };
+                                    match data.get::<::DbPool>() {
+                                        Some(db) => db.clone(),
+                                        None => bail!(::ErrorKind::NoDatabase),
+                                    }
+                                };
                                 db.prep_exec("INSERT INTO images (`name`, `code`) VALUES (?, ?)",
                                                (cmd, code))?;
-                                Ok((Some(msg.reply("Image uploaded!")?.id), None))
+                                Ok(Some(msg.reply("Image uploaded!")?.id))
                             }
-                            _ => Ok((Some(msg.reply("imgur did something weird!")?.id), None)),
+                            _ => Ok(Some(msg.reply("imgur did something weird!")?.id)),
                         }
                     }
-                    _ => Ok((Some(msg.reply("imgur failed!")?.id), None)),
+                    _ => Ok(Some(msg.reply("imgur failed!")?.id)),
                 }
             } else {
-                Ok((Some(msg.reply("You can only upload one image at a time")?.id), None))
+                Ok(Some(msg.reply("You can only upload one image at a time")?.id))
             }
         }
-        None => Ok((None, None)),
+        None => Ok(None),
     }
 }

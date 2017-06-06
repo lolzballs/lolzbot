@@ -3,7 +3,7 @@ use serenity::model::{Message, MessageId};
 
 pub const PREFIX: &'static str = "type";
 
-pub fn handle(_: Context, msg: &Message, _: &str) -> ::Result<Option<MessageId>> {
+pub fn handle(_: Context, msg: &Message, _: &str) -> super::CommandResult {
     msg.channel_id.broadcast_typing()?;
-    Ok(None)
+    Ok((None, None))
 }

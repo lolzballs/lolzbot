@@ -14,10 +14,14 @@ extern crate serde_json;
 extern crate serenity;
 extern crate typemap;
 
+#[macro_use]
+mod macros;
+
 mod commands;
 mod config;
 mod error;
 mod events;
+mod pagination;
 
 use config::Config;
 use error::*;
@@ -75,9 +79,11 @@ fn actual_main() -> Result<()> {
         data.insert::<StartTime>(Instant::now());
     }
 
-    client.on_message_delete(events::on_message_delete);
-    client.on_ready(events::on_ready);
     client.on_message(events::on_message);
+    client.on_message_delete(events::on_message_delete);
+    client.on_reaction_add(events::on_reaction_add);
+    client.on_reaction_remove(events::on_reaction_remove);
+    client.on_ready(events::on_ready);
 
     Ok(client.start()?)
 }

@@ -1,9 +1,10 @@
-use error_chain::ChainedError;
 use serenity::client::Context;
-use serenity::model::{ChannelId, Message, MessageId, Ready, UserId};
+use serenity::model::{ChannelId, Message, MessageId, Reaction, Ready, UserId};
 
 mod on_message;
 mod on_message_delete;
+mod on_reaction_add;
+mod on_reaction_remove;
 mod on_ready;
 
 macro_rules! handle {
@@ -32,7 +33,12 @@ pub fn on_message_delete(ctx: Context, channel: ChannelId, msg: MessageId) {
 pub fn on_message(ctx: Context, msg: Message) {
     handle!(self::on_message::handle(ctx, msg));
 }
-
+pub fn on_reaction_add(ctx: Context, r: Reaction) {
+    handle!(self::on_reaction_add::handle(ctx, r));
+}
+pub fn on_reaction_remove(ctx: Context, r: Reaction) {
+    handle!(self::on_reaction_remove::handle(ctx, r));
+}
 pub fn on_ready(ctx: Context, r: Ready) {
     handle!(self::on_ready::handle(ctx, r));
 }

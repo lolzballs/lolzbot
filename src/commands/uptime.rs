@@ -5,7 +5,7 @@ use serenity::model::{Message, MessageId};
 
 pub const PREFIX: &'static str = "uptime";
 
-pub fn handle(ctx: Context, msg: &Message, _: &str) -> ::Result<Option<MessageId>> {
+pub fn handle(ctx: Context, msg: &Message, _: &str) -> super::CommandResult {
     let duration = {
         let data = match ctx.data.lock() {
             Ok(data) => data,
@@ -74,5 +74,5 @@ pub fn handle(ctx: Context, msg: &Message, _: &str) -> ::Result<Option<MessageId
                    seconds.to_string().as_str(),
                    seconds_txt]
             .concat();
-    Ok(Some(msg.reply(&message)?.id))
+    Ok((Some(msg.reply(&message)?.id), None))
 }
