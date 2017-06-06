@@ -24,10 +24,11 @@ pub fn handle(ctx: Context, msg: &Message, _: &str) -> super::CommandResult {
     message.react("%E2%9E%A1")?;
     let msg_id = message.id.0;
     let cmd_id = msg.id.0;
+    let author_id = msg.author.id.0;
     Ok((Some(message.id),
         Some(Box::new(move |db| {
-                          db.prep_exec("INSERT INTO paginations (`message_id`, `command_id`) VALUES (?, ?)",
-                   (msg_id, cmd_id))?;
+                          db.prep_exec("INSERT INTO paginations (`message_id`, `command_id`, `author_id`) VALUES (?, ?, ?)",
+                   (msg_id, cmd_id, author_id))?;
                           Ok(())
                       }))))
 }
