@@ -12,6 +12,10 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                 None => return Ok((None, None)),
             };
 
+            if name.len() > 191 {
+                return Ok((Some(msg.reply("Name is too long (max. 191 chars)")?.id), None));
+            }
+
             let id = match id.trim().parse::<u64>() {
                 Ok(id) => id,
                 Err(_) => return Ok((None, None)),
@@ -27,12 +31,8 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                         Ok((Some(msg.reply("Image updated!")?.id), None))
                     }
                 }
-                Err(mysql::Error::MySqlError(mysql::MySqlError { code, .. })) => {
-                    if code == 1062 {
-                        Ok((Some(msg.reply("Image has duplicate name")?.id), None))
-                    } else {
-                        Ok((None, None))
-                    }
+                Err(mysql::Error::MySqlError(mysql::MySqlError { code: 1062, .. })) => {
+                    Ok((Some(msg.reply("Image has duplicate name")?.id), None))
                 }
                 Err(e) => Err(e.into()),
             }
