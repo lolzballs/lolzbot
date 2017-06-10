@@ -5,7 +5,7 @@ use hyper::Client;
 use hyper::header::Authorization;
 use multipart::client::lazy::Multipart;
 use serenity::client::Context;
-use serenity::model::{Message, MessageId};
+use serenity::model::Message;
 
 pub const PREFIX: &'static str = "upload";
 

@@ -1,6 +1,6 @@
 use mysql;
 use serenity::client::Context;
-use serenity::model::{Message, MessageId};
+use serenity::model::Message;
 use serenity::utils::MessageBuilder;
 
 pub const PREFIX: &'static str = "prefix";

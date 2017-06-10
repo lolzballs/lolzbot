@@ -1,7 +1,7 @@
 use std;
 
 use serenity::client::Context;
-use serenity::model::{Message, MessageId};
+use serenity::model::Message;
 
 pub const PREFIX: &'static str = "restart";
 
