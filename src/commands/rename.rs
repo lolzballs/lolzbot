@@ -1,55 +1,42 @@
-use std::io::Cursor;
-
 use mysql;
 use serenity::client::Context;
-use serenity::model::{Message, MessageId};
+use serenity::model::Message;
 
-pub const PREFIX: &'static str = "upload";
+pub const PREFIX: &'static str = "rename";
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> ::Result<Option<MessageId>> {
+pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
     match ::CONFIG.admins.iter().find(|&&a| a == msg.author.id.0) {
         Some(_) => {
-            if msg.attachments.len() == 1 {
-                let mut image = match msg.attachments[0].download() {
-                    Ok(image) => Cursor::new(image),
-                    Err(e) => {
-                        return Ok(Some(msg.reply(&format!("Error downloading image: {}", e))?
-                                           .id))
+            let (id, name) = match cmd.find(" ") {
+                Some(s) => cmd.split_at(s),
+                None => return Ok((None, None)),
+            };
+
+            let id = match id.trim().parse::<u64>() {
+                Ok(id) => id,
+                Err(_) => return Ok((None, None)),
+            };
+
+            let res = get_database!(ctx).prep_exec("UPDATE images SET name = ? WHERE id = ?",
+                                                   (name.trim(), id));
+            match res {
+                Ok(res) => {
+                    if res.affected_rows() == 0 {
+                        Ok((None, None))
+                    } else {
+                        Ok((Some(msg.reply("Image updated!")?.id), None))
                     }
-                };
-                let res = Multipart::new()
-                    .add_stream("image", &mut image, None as Option<&str>, None)
-                    .client_request_mut(&Client::new(), "https://api.imgur.com/3/image", |r| {
-                        r.header(Authorization(["Client-ID ", &::CONFIG.imgur_id].concat()))
-                    })?;
-                let res: Value = serde_json::from_reader(res)?;
-                match res["success"] {
-                    Value::Bool(true) => {
-                        match res["data"]["id"] {
-                            Value::String(ref code) => {
-                                let db = {
-                                    let data = match ctx.data.lock() {
-                                        Ok(data) => data,
-                                        Err(_) => bail!(::ErrorKind::MutexPosioned),
-                                    };
-                                    match data.get::<::DbPool>() {
-                                        Some(db) => db.clone(),
-                                        None => bail!(::ErrorKind::NoDatabase),
-                                    }
-                                };
-                                db.prep_exec("INSERT INTO images (`name`, `code`) VALUES (?, ?)",
-                                               (cmd, code))?;
-                                Ok(Some(msg.reply("Image uploaded!")?.id))
-                            }
-                            _ => Ok(Some(msg.reply("imgur did something weird!")?.id)),
-                        }
-                    }
-                    _ => Ok(Some(msg.reply("imgur failed!")?.id)),
                 }
-            } else {
-                Ok(Some(msg.reply("You can only upload one image at a time")?.id))
+                Err(mysql::Error::MySqlError(mysql::MySqlError { code, .. })) => {
+                    if code == 1062 {
+                        Ok((Some(msg.reply("Image has duplicate name")?.id), None))
+                    } else {
+                        Ok((None, None))
+                    }
+                }
+                Err(e) => Err(e.into()),
             }
         }
-        None => Ok(None),
+        None => Ok((None, None)),
     }
 }

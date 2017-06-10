@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use serde_json::{self, Value};
-use hyper::Client;
+use hyper::client::Client;
 use hyper::header::Authorization;
 use multipart::client::lazy::Multipart;
 use serenity::client::Context;
