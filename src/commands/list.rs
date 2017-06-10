@@ -9,7 +9,7 @@ pub fn list(db: &mysql::Pool, page: usize) -> ::Result<String> {
     names.push(String::from("```"));
     names.push(String::from(format!("Page {}", page + 1)));
     for row in db.prep_exec("SELECT (`name`) FROM images LIMIT ? OFFSET ?",
-                            (2, page * 2))? {
+                            (10, page * 10))? {
         let name: String = mysql::from_row(row?);
         names.push(name);
     }
