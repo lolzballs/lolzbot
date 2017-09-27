@@ -5,18 +5,14 @@ use serenity::client::Context;
 use serenity::model::{Reaction, ReactionType};
 
 pub fn on_reaction(ctx: Context, r: Reaction) -> ::Result<()> {
-    let not_bot = match match ctx.data.lock() {
-                  Ok(data) => data,
-                  Err(_) => bail!(::ErrorKind::MutexPosioned),
-              }
-              .get::<::BotId>() {
+    let not_bot = match ctx.data.lock().get::<::BotId>() {
         Some(id) => id.0 != r.user_id.0,
         None => bail!(::ErrorKind::NoBotId),
     };
     if not_bot {
         match r.emoji {
             ReactionType::Unicode(s) => {
-                let db = get_database!(ctx);
+                let db = get_data!(ctx, ::DbPool);
                 let (mut page, author): (usize, u64) = {
                     if let Some(row) = db.prep_exec("SELECT `current_page`, `author_id` FROM paginations WHERE `message_id` = ?",
                                        (r.message_id.0,))?.next() {
@@ -50,8 +46,10 @@ pub fn on_reaction(ctx: Context, r: Reaction) -> ::Result<()> {
                 }
 
                 let list = commands::list::list(&db, page)?;
-                r.channel_id
-                    .edit_message(r.message_id, |m| m.content(&list))?;
+                r.channel_id.edit_message(
+                    r.message_id,
+                    |m| m.content(&list),
+                )?;
             }
             _ => (),
         }

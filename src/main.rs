@@ -7,8 +7,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate mysql;
 
-extern crate hyper;
-extern crate multipart;
+extern crate rand;
 extern crate serde;
 extern crate serde_json;
 extern crate serenity;
@@ -21,15 +20,16 @@ mod commands;
 mod config;
 mod error;
 mod events;
-mod pagination;
+// mod pagination;
 
 use config::Config;
 use error::*;
+use events::Handler;
 
 use std::time::Instant;
 
 use mysql::{Opts, OptsBuilder};
-use serenity::Client;
+use serenity::client::Client;
 use serenity::model::UserId;
 use typemap::Key;
 
@@ -52,13 +52,13 @@ impl Key for BotId {
 
 fn main() {
     std::process::exit(match actual_main() {
-                           Ok(_) => 0,
-                           Err(err) => panic!("Error in main: {}", err),
-                       });
+        Ok(_) => 0,
+        Err(err) => panic!("Error in main: {}", err),
+    });
 }
 
 fn actual_main() -> Result<()> {
-    let mut client = Client::login(&CONFIG.token);
+    let mut client = Client::new(&CONFIG.token, Handler);
 
     let pool = {
         let mut builder = OptsBuilder::new();
@@ -74,16 +74,10 @@ fn actual_main() -> Result<()> {
     };
 
     {
-        let mut data = client.data.lock().unwrap();
+        let mut data = client.data.lock();
         data.insert::<DbPool>(pool);
         data.insert::<StartTime>(Instant::now());
     }
-
-    client.on_message(events::on_message);
-    client.on_message_delete(events::on_message_delete);
-    client.on_reaction_add(events::on_reaction_add);
-    client.on_reaction_remove(events::on_reaction_remove);
-    client.on_ready(events::on_ready);
 
     Ok(client.start()?)
 }

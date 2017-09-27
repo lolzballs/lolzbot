@@ -6,21 +6,20 @@ use serenity::model::Message;
 
 pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
     let (db, bot_mention) = {
-        let data = match ctx.data.lock() {
-            Ok(data) => data,
-            Err(_) => bail!(::ErrorKind::MutexPosioned),
-        };
+        let data = ctx.data.lock();
         let db = match data.get::<::DbPool>() {
             Some(db) => db.clone(),
-            None => bail!(::ErrorKind::NoDatabase),
+            None => bail!("Could not get ::DbPool"),
         };
         let bot_mention = data.get::<::BotId>().map(|id| format!("<@{}>", id.0));
         (db, bot_mention)
     };
 
-    let user: Option<String> = match db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
-                                                  (msg.author.id.0,))?
-              .next() {
+    let user: Option<String> = match db.prep_exec(
+        "SELECT (`prefix`) FROM users WHERE `id` = ?",
+        (msg.author.id.0,),
+    )?
+        .next() {
         Some(prefix) => Some(mysql::from_row(prefix?)),
         None => None,
     };
@@ -33,9 +32,9 @@ pub fn handle(ctx: Context, msg: Message) -> ::Result<()> {
     }
 
     let cmd = {
-        let cmd = prefixes
-            .iter()
-            .find(|&&prefix| msg.content.starts_with(prefix));
+        let cmd = prefixes.iter().find(
+            |&&prefix| msg.content.starts_with(prefix),
+        );
         if let Some(prefix) = cmd {
             msg.content.split_at(prefix.len()).1
         } else {

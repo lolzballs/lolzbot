@@ -1,44 +1,58 @@
-use serenity::client::Context;
-use serenity::model::{ChannelId, Message, MessageId, Reaction, Ready, UserId};
+use serenity::client::{Context, EventHandler};
+use serenity::model::{ChannelId, Message, MessageId, Ready, UserId};
+
+use std::thread;
 
 mod on_message;
 mod on_message_delete;
-mod on_reaction_add;
-mod on_reaction_remove;
+// mod on_reaction_add;
+// mod on_reaction_remove;
 mod on_ready;
 
 macro_rules! handle {
     ($x:expr) => {
-        match $x {
-            Ok(_) => (),
-            Err(e) => {
-                for &admin in ::CONFIG.admins.iter() {
-                    let res = UserId(admin)
-                        .get()
-                        .and_then(|o| o.dm(&format!("{:?}", e)));
-                    match res {
-                        Ok(_) => (),
-                        Err(e) => println!("CRITICAL: {:?}", e),
+        // TODO: Asyncify this
+        thread::spawn(move || {
+            match $x {
+                Ok(_) => (),
+                Err(e) => {
+                    for &admin in ::CONFIG.admins.iter() {
+                        let res = UserId(admin)
+                            .get()
+                            .and_then(|o| o.dm(|m| m.content(&format!("{:?}", e))));
+                        match res {
+                            Ok(_) => (),
+                            Err(e) => println!("CRITICAL: {:?}", e),
+                        }
                     }
                 }
             }
-        }
+        });
     }
 }
 
-pub fn on_message_delete(ctx: Context, channel: ChannelId, msg: MessageId) {
-    handle!(self::on_message_delete::handle(ctx, channel, msg));
-}
+pub struct Handler;
 
-pub fn on_message(ctx: Context, msg: Message) {
-    handle!(self::on_message::handle(ctx, msg));
-}
-pub fn on_reaction_add(ctx: Context, r: Reaction) {
-    handle!(self::on_reaction_add::handle(ctx, r));
-}
-pub fn on_reaction_remove(ctx: Context, r: Reaction) {
-    handle!(self::on_reaction_remove::handle(ctx, r));
-}
-pub fn on_ready(ctx: Context, r: Ready) {
-    handle!(self::on_ready::handle(ctx, r));
+impl EventHandler for Handler {
+    fn on_message_delete(&self, ctx: Context, channel: ChannelId, msg: MessageId) {
+        handle!(self::on_message_delete::handle(ctx, channel, msg));
+    }
+
+    fn on_message(&self, ctx: Context, msg: Message) {
+        handle!(self::on_message::handle(ctx, msg));
+    }
+
+    /*
+    fn on_reaction_add(&self, ctx: Context, r: Reaction) {
+        handle!(self::on_reaction_add::handle(ctx, r));
+    }
+
+    fn on_reaction_remove(&self, ctx: Context, r: Reaction) {
+        handle!(self::on_reaction_remove::handle(ctx, r));
+    }
+    */
+
+    fn on_ready(&self, ctx: Context, r: Ready) {
+        handle!(self::on_ready::handle(ctx, r));
+    }
 }

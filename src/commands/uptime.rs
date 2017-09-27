@@ -7,15 +7,8 @@ pub const PREFIX: &'static str = "uptime";
 
 pub fn handle(ctx: Context, msg: &Message, _: &str) -> super::CommandResult {
     let duration = {
-        let data = match ctx.data.lock() {
-            Ok(data) => data,
-            Err(_) => bail!(::ErrorKind::MutexPosioned),
-        };
-        let start = match data.get::<::StartTime>() {
-            Some(time) => time,
-            None => bail!("No start time!"),
-        };
-        Instant::now().duration_since(*start)
+        let start = get_data!(ctx, ::StartTime);
+        Instant::now().duration_since(start)
     };
     let delta = duration.as_secs();
     let (hours, remainder) = (delta / 3600, delta % 3600);
@@ -64,15 +57,16 @@ pub fn handle(ctx: Context, msg: &Message, _: &str) -> super::CommandResult {
         " seconds!"
     };
 
-    let message = ["This bot has been up for ",
-                   days_str.as_ref().map_or("", |s| s.as_str()),
-                   days_txt,
-                   hours_str.as_ref().map_or("", |s| s.as_str()),
-                   hours_txt,
-                   minutes_str.as_ref().map_or("", |s| s.as_str()),
-                   minutes_txt,
-                   seconds.to_string().as_str(),
-                   seconds_txt]
-            .concat();
+    let message = [
+        "This bot has been up for ",
+        days_str.as_ref().map_or("", |s| s.as_str()),
+        days_txt,
+        hours_str.as_ref().map_or("", |s| s.as_str()),
+        hours_txt,
+        minutes_str.as_ref().map_or("", |s| s.as_str()),
+        minutes_txt,
+        seconds.to_string().as_str(),
+        seconds_txt,
+    ].concat();
     Ok((Some(msg.reply(&message)?.id), None))
 }

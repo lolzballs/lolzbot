@@ -8,7 +8,7 @@ pub struct Config {
     pub token: String,
     pub prefix: String,
     pub admins: Vec<u64>,
-    pub imgur_id: String,
+    pub image_path: String,
     pub db_ip: Option<String>,
     pub db_port: Option<u16>,
     pub db_user: Option<String>,

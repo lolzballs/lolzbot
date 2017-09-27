@@ -13,7 +13,10 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
             };
 
             if name.len() > 191 {
-                return Ok((Some(msg.reply("Name is too long (max. 191 chars)")?.id), None));
+                return Ok((
+                    Some(msg.reply("Name is too long (max. 191 chars)")?.id),
+                    None,
+                ));
             }
 
             let id = match id.trim().parse::<u64>() {
@@ -21,8 +24,10 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                 Err(_) => return Ok((None, None)),
             };
 
-            let res = get_database!(ctx).prep_exec("UPDATE images SET name = ? WHERE id = ?",
-                                                   (name.trim(), id));
+            let res = get_data!(ctx, ::DbPool).prep_exec(
+                "UPDATE images SET name = ? WHERE id = ?",
+                (name.trim(), id),
+            );
             match res {
                 Ok(res) => {
                     if res.affected_rows() == 0 {

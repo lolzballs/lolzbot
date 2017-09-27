@@ -7,7 +7,7 @@ mod copy;
 mod exception;
 mod id;
 mod image;
-pub mod list;
+// pub mod list;
 mod ping;
 mod prefix;
 mod rename;

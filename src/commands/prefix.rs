@@ -6,10 +6,11 @@ use serenity::utils::MessageBuilder;
 pub const PREFIX: &'static str = "prefix";
 
 pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
-    let db = get_database!(ctx);
+    let db = get_data!(ctx, ::DbPool);
     if cmd.len() == 0 {
-        let user_prefix: Option<_> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?",
-                                                  (msg.author.id.0,))?
+        let user_prefix: Option<_> = db.prep_exec("SELECT (`prefix`) FROM users WHERE `id` = ?", (
+            msg.author.id.0,
+        ))?
             .next();
         let string = {
             let builder = MessageBuilder::new()
@@ -30,12 +31,17 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
 
         Ok((Some(msg.reply(&string)?.id), None))
     } else {
-        db.prep_exec(r#"INSERT INTO `users` (`id`, `prefix`)
+        db.prep_exec(
+            r#"INSERT INTO `users` (`id`, `prefix`)
                     VALUES (:id, :prefix)
                     ON DUPLICATE KEY UPDATE `prefix` = :prefix"#,
-                       params!{"id" => msg.author.id.0, "prefix" => cmd})?;
-        Ok((Some(msg.reply(&["Prefix changed to ", cmd, "!"].concat())?
-                     .id),
-            None))
+            params!{"id" => msg.author.id.0, "prefix" => cmd},
+        )?;
+        Ok((
+            Some(
+                msg.reply(&["Prefix changed to ", cmd, "!"].concat())?.id,
+            ),
+            None,
+        ))
     }
 }

@@ -14,7 +14,10 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
             let name = name.trim();
 
             if name.len() > 191 {
-                return Ok((Some(msg.reply("Name is too long (max. 191 chars)")?.id), None));
+                return Ok((
+                    Some(msg.reply("Name is too long (max. 191 chars)")?.id),
+                    None,
+                ));
             }
 
             let id = match id.trim().parse::<u64>() {
@@ -22,7 +25,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                 Err(_) => return Ok((None, None)),
             };
 
-            let db = get_database!(ctx);
+            let db = get_data!(ctx, ::DbPool);
             let res = db.prep_exec("INSERT INTO images (`name`, `code`) SELECT ?, `code` FROM images WHERE `id` = ?", (name, id));
             match res {
                 Ok(res) => {

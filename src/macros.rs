@@ -1,14 +1,11 @@
 #[macro_export]
-macro_rules! get_database {
-    ($x:ident) => {
+macro_rules! get_data {
+    ($x:ident, $t:ty) => {
         {
-            let data = match $x.data.lock() {
-                Ok(data) => data,
-                Err(_) => bail!(::ErrorKind::MutexPosioned),
-            };
-            match data.get::<::DbPool>() {
+            let data = $x.data.lock();
+            match data.get::<$t>() {
                 Some(db) => db.clone(),
-                None => bail!(::ErrorKind::NoDatabase),
+                None => bail!("Could not get {}", stringify!($t)),
             }
         }
     }
