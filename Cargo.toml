@@ -15,5 +15,4 @@ serde_json = "1.0"
 typemap = "0.3"
 
 [dependencies.serenity]
-version = "0.4"
-path = "../serenity"
+version = "0.5"

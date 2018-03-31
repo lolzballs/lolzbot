@@ -16,7 +16,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
         {
             let code: String = mysql::from_row(row?);
             let mut file_path: PathBuf = [&::CONFIG.image_path, &code].iter().collect();
-            file_path.set_extension("jpg");
+            file_path.set_extension("png");
             Some(msg.channel_id.send_files(vec![&file_path], |m| m)?.id)
         } else {
             None

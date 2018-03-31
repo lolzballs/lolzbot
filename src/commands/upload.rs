@@ -14,7 +14,7 @@ fn generate_code() -> String {
     while {
         s = rand::thread_rng().gen_ascii_chars().take(7).collect();
         let mut file_path: PathBuf = [&::CONFIG.image_path, &s].iter().collect();
-        file_path.set_extension("jpg");
+        file_path.set_extension("png");
         println!("{:?}", file_path);
         file_path.exists()
     }
@@ -44,7 +44,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                 let code = generate_code();
                 let mut file = {
                     let mut file_path: PathBuf = [&::CONFIG.image_path, &code].iter().collect();
-                    file_path.set_extension("jpg");
+                    file_path.set_extension("png");
                     File::create(file_path)
                 }?;
                 file.write_all(&image)?;
