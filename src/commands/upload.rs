@@ -1,28 +1,32 @@
 use std::fs::File;
 use std::io::Write;
+use std::iter;
 use std::path::PathBuf;
 
 use mysql;
+use rand::distributions::Alphanumeric;
 use rand::{self, Rng};
 use serenity::client::Context;
-use serenity::model::Message;
+use serenity::model::channel::Message;
 
 pub const PREFIX: &'static str = "upload";
 
 fn generate_code() -> String {
     let mut s;
     while {
-        s = rand::thread_rng().gen_ascii_chars().take(7).collect();
+        let mut rng = rand::thread_rng();
+        s = iter::repeat(())
+            .map(|()| rng.sample(Alphanumeric))
+            .take(7)
+            .collect();
         let mut file_path: PathBuf = [&::CONFIG.image_path, &s].iter().collect();
         file_path.set_extension("png");
-        println!("{:?}", file_path);
         file_path.exists()
-    }
-    {}
+    } {}
     s
 }
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
+pub fn handle(ctx: &Context, msg: &Message, cmd: &str) -> super::CommandResult {
     match ::CONFIG.admins.iter().find(|&&a| a == msg.author.id.0) {
         Some(_) => {
             if msg.attachments.len() == 1 {
@@ -32,9 +36,10 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                         return Ok((
                             Some(
                                 msg.reply(
+                                    ctx,
                                     &format!("Error downloading image from Discord: {}", e),
                                 )?
-                                    .id,
+                                .id,
                             ),
                             None,
                         ))
@@ -48,27 +53,28 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                     File::create(file_path)
                 }?;
                 file.write_all(&image)?;
-                let res = db.prep_exec("INSERT INTO images (`name`, `code`) VALUES (?, ?)", (
-                    cmd,
-                    code,
-                ));
+                let res = db.prep_exec(
+                    "INSERT INTO images (`name`, `code`) VALUES (?, ?)",
+                    (cmd, code),
+                );
                 match res {
                     Ok(res) => {
                         if res.affected_rows() == 0 {
                             Ok((None, None))
                         } else {
-                            Ok((Some(msg.reply("Image uploaded!")?.id), None))
+                            Ok((Some(msg.reply(ctx, "Image uploaded!")?.id), None))
                         }
                     }
                     Err(mysql::Error::MySqlError(mysql::MySqlError { code: 1062, .. })) => {
-                        Ok((Some(msg.reply("Image has duplicate name")?.id), None))
+                        Ok((Some(msg.reply(ctx, "Image has duplicate name")?.id), None))
                     }
                     Err(e) => Err(e.into()),
                 }
             } else {
                 Ok((
                     Some(
-                        msg.reply("You can only upload one image at a time")?.id,
+                        msg.reply(ctx, "You can only upload one image at a time")?
+                            .id,
                     ),
                     None,
                 ))

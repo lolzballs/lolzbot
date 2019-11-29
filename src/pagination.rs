@@ -46,10 +46,8 @@ pub fn on_reaction(ctx: Context, r: Reaction) -> ::Result<()> {
                 }
 
                 let list = commands::list::list(&db, page)?;
-                r.channel_id.edit_message(
-                    r.message_id,
-                    |m| m.content(&list),
-                )?;
+                r.channel_id
+                    .edit_message(r.message_id, |m| m.content(&list))?;
             }
             _ => (),
         }

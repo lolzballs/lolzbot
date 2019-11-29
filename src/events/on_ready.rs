@@ -1,7 +1,7 @@
 use serenity::client::Context;
-use serenity::model::Ready;
+use serenity::model::gateway::Ready;
 
 pub fn handle(ctx: Context, r: Ready) -> ::Result<()> {
-    ctx.data.lock().insert::<::BotId>(r.user.id);
+    ctx.data.write().insert::<::BotId>(r.user.id);
     Ok(())
 }

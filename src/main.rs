@@ -3,9 +3,9 @@ extern crate error_chain;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
-extern crate serde_derive;
-#[macro_use]
 extern crate mysql;
+#[macro_use]
+extern crate serde_derive;
 
 extern crate rand;
 extern crate serde;
@@ -30,7 +30,7 @@ use std::time::Instant;
 
 use mysql::{Opts, OptsBuilder};
 use serenity::client::Client;
-use serenity::model::UserId;
+use serenity::model::id::UserId;
 use typemap::Key;
 
 lazy_static! {
@@ -58,7 +58,7 @@ fn main() {
 }
 
 fn actual_main() -> Result<()> {
-    let mut client = Client::new(&CONFIG.token, Handler);
+    let mut client = Client::new(&CONFIG.token, Handler)?;
 
     let pool = {
         let mut builder = OptsBuilder::new();
@@ -74,7 +74,7 @@ fn actual_main() -> Result<()> {
     };
 
     {
-        let mut data = client.data.lock();
+        let mut data = client.data.write();
         data.insert::<DbPool>(pool);
         data.insert::<StartTime>(Instant::now());
     }

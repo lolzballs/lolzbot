@@ -4,15 +4,15 @@ version = "0.1.0"
 authors = ["Benjamin Cheng <ben@bcheng.cf>"]
 
 [dependencies]
-chrono = "0.3"
-error-chain = "0.10"
-lazy_static = "0.2"
+chrono = "0.4"
+error-chain = "0.12"
+lazy_static = "1.4"
 mysql = "11.1"
-rand = "0.3"
+rand = "0.7"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 typemap = "0.3"
 
 [dependencies.serenity]
-version = "0.5"
+version = "0.7"

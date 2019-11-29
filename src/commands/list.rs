@@ -1,6 +1,6 @@
 use mysql;
 use serenity::client::Context;
-use serenity::model::Message;
+use serenity::model::channel::Message;
 
 pub const PREFIX: &'static str = "list";
 
@@ -11,8 +11,7 @@ pub fn list(db: &mysql::Pool, page: usize) -> ::Result<String> {
     for row in db.prep_exec(
         "SELECT (`name`) FROM images LIMIT ? OFFSET ?",
         (10, page * 10),
-    )?
-    {
+    )? {
         let name: String = mysql::from_row(row?);
         names.push(name);
     }
@@ -20,11 +19,11 @@ pub fn list(db: &mysql::Pool, page: usize) -> ::Result<String> {
     Ok(names.join("\n"))
 }
 
-pub fn handle(ctx: Context, msg: &Message, _: &str) -> super::CommandResult {
+pub fn handle(ctx: &Context, msg: &Message, _: &str) -> super::CommandResult {
     let db = get_data!(ctx, ::DbPool);
-    let message = msg.reply(&list(&db, 0)?)?;
-    message.react("%E2%AC%85")?;
-    message.react("%E2%9E%A1")?;
+    let message = msg.reply(ctx, &list(&db, 0)?)?;
+    message.react(ctx, "%E2%AC%85")?;
+    message.react(ctx, "%E2%9E%A1")?;
     let msg_id = message.id.0;
     let cmd_id = msg.id.0;
     let author_id = msg.author.id.0;

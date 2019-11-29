@@ -1,11 +1,11 @@
 use std::time::Instant;
 
 use serenity::client::Context;
-use serenity::model::Message;
+use serenity::model::channel::Message;
 
 pub const PREFIX: &'static str = "uptime";
 
-pub fn handle(ctx: Context, msg: &Message, _: &str) -> super::CommandResult {
+pub fn handle(ctx: &Context, msg: &Message, _: &str) -> super::CommandResult {
     let duration = {
         let start = get_data!(ctx, ::StartTime);
         Instant::now().duration_since(start)
@@ -67,6 +67,7 @@ pub fn handle(ctx: Context, msg: &Message, _: &str) -> super::CommandResult {
         minutes_txt,
         seconds.to_string().as_str(),
         seconds_txt,
-    ].concat();
-    Ok((Some(msg.reply(&message)?.id), None))
+    ]
+    .concat();
+    Ok((Some(msg.reply(ctx, &message)?.id), None))
 }

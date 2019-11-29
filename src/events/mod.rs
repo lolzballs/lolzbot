@@ -1,5 +1,7 @@
 use serenity::client::{Context, EventHandler};
-use serenity::model::{ChannelId, Message, MessageId, Ready, UserId};
+use serenity::model::channel::Message;
+use serenity::model::gateway::Ready;
+use serenity::model::id::{ChannelId, MessageId, UserId};
 
 use std::thread;
 
@@ -10,36 +12,35 @@ mod on_message_delete;
 mod on_ready;
 
 macro_rules! handle {
-    ($x:expr) => {
+    ($ctx:ident, $x:expr) => {
         // TODO: Asyncify this
-        thread::spawn(move || {
-            match $x {
-                Ok(_) => (),
-                Err(e) => {
-                    for &admin in ::CONFIG.admins.iter() {
-                        let res = UserId(admin)
-                            .get()
-                            .and_then(|o| o.dm(|m| m.content(&format!("{:?}", e))));
-                        match res {
-                            Ok(_) => (),
-                            Err(e) => println!("CRITICAL: {:?}", e),
-                        }
+        let ctx = $ctx.clone();
+        thread::spawn(move || match $x {
+            Ok(_) => (),
+            Err(e) => {
+                for &admin in ::CONFIG.admins.iter() {
+                    let res = UserId(admin).create_dm_channel(&ctx.http).and_then(|c| {
+                        c.send_message(&ctx.http, |m| m.content(&format!("{:?}", e)))
+                    });
+                    match res {
+                        Ok(_) => (),
+                        Err(e) => println!("CRITICAL: {:?}", e),
                     }
                 }
             }
         });
-    }
+    };
 }
 
 pub struct Handler;
 
 impl EventHandler for Handler {
-    fn on_message_delete(&self, ctx: Context, channel: ChannelId, msg: MessageId) {
-        handle!(self::on_message_delete::handle(ctx, channel, msg));
+    fn message_delete(&self, ctx: Context, channel: ChannelId, msg: MessageId) {
+        handle!(ctx, self::on_message_delete::handle(ctx, channel, msg));
     }
 
-    fn on_message(&self, ctx: Context, msg: Message) {
-        handle!(self::on_message::handle(ctx, msg));
+    fn message(&self, ctx: Context, msg: Message) {
+        handle!(ctx, self::on_message::handle(ctx, msg));
     }
 
     /*
@@ -52,7 +53,7 @@ impl EventHandler for Handler {
     }
     */
 
-    fn on_ready(&self, ctx: Context, r: Ready) {
-        handle!(self::on_ready::handle(ctx, r));
+    fn ready(&self, ctx: Context, r: Ready) {
+        handle!(ctx, self::on_ready::handle(ctx, r));
     }
 }

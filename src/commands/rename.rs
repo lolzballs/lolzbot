@@ -1,10 +1,10 @@
 use mysql;
 use serenity::client::Context;
-use serenity::model::Message;
+use serenity::model::channel::Message;
 
 pub const PREFIX: &'static str = "rename";
 
-pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
+pub fn handle(ctx: &Context, msg: &Message, cmd: &str) -> super::CommandResult {
     match ::CONFIG.admins.iter().find(|&&a| a == msg.author.id.0) {
         Some(_) => {
             let (id, name) = match cmd.find(" ") {
@@ -14,7 +14,7 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
 
             if name.len() > 191 {
                 return Ok((
-                    Some(msg.reply("Name is too long (max. 191 chars)")?.id),
+                    Some(msg.reply(ctx, "Name is too long (max. 191 chars)")?.id),
                     None,
                 ));
             }
@@ -24,20 +24,18 @@ pub fn handle(ctx: Context, msg: &Message, cmd: &str) -> super::CommandResult {
                 Err(_) => return Ok((None, None)),
             };
 
-            let res = get_data!(ctx, ::DbPool).prep_exec(
-                "UPDATE images SET name = ? WHERE id = ?",
-                (name.trim(), id),
-            );
+            let res = get_data!(ctx, ::DbPool)
+                .prep_exec("UPDATE images SET name = ? WHERE id = ?", (name.trim(), id));
             match res {
                 Ok(res) => {
                     if res.affected_rows() == 0 {
                         Ok((None, None))
                     } else {
-                        Ok((Some(msg.reply("Image updated!")?.id), None))
+                        Ok((Some(msg.reply(ctx, "Image updated!")?.id), None))
                     }
                 }
                 Err(mysql::Error::MySqlError(mysql::MySqlError { code: 1062, .. })) => {
-                    Ok((Some(msg.reply("Image has duplicate name")?.id), None))
+                    Ok((Some(msg.reply(ctx, "Image has duplicate name")?.id), None))
                 }
                 Err(e) => Err(e.into()),
             }
